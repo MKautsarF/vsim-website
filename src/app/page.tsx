@@ -19,6 +19,16 @@ interface IgnitionEvent {
   ignitionEvent: boolean;
 }
 
+interface ExtinguisherEvent {
+  Frame: number;
+  ExtinguisherEvent: boolean;
+}
+
+interface radioEvent {
+  Frame: number;
+  radioEvent: boolean;
+}
+
 interface parkBrakeEvent {
   Frame: number;
   parkBrakeEvent: boolean;
@@ -69,6 +79,12 @@ interface Requirements {
   TestTCS: string;
 }
 
+interface LoadingUnloadData {
+  AreaName: string;
+  Duration: string;
+  Load: number;
+}
+
 interface SimulationData {
   ActualGearEvent: ActualGearEvent[];
   IntendedGearEvent: IntendedGearEvent[];
@@ -78,9 +94,9 @@ interface SimulationData {
   ReplayOperatorError: ReplayOperatorError[];
   ReplayEvents: ReplayEvents[];
   GeneralData: GeneralData;
-  ExtinguisherEvent: any[];
-  radioEvent: any[];
-  LoadingUnloadData: any[];
+  ExtinguisherEvent: ExtinguisherEvent[];
+  radioEvent: radioEvent[];
+  LoadingUnloadData: LoadingUnloadData[];
   TotalPoint: TotalPoint;
   Requirements: Requirements;
 }
@@ -113,12 +129,14 @@ export default function Home() {
   const [ignitionEvent, setIgnitionEvent] = useState<boolean | string>(false);
   //Extinguisher Event
   const [extinguisherEventID, setExtinguisherEventID] = useState<number | 0>(0);
-  const [extinguisherEvent, setExtinguisherEvent] = useState<any[] | null>(
+  const [frameEE, setFrameEE] = useState<number | string | null>(null);
+  const [extinguisherEvent, setExtinguisherEvent] = useState<boolean | null>(
     null
   );
   //radio Event
   const [radioEventID, setRadioEventID] = useState<number | 0>(0);
-  const [radioEvent, setRadioEvent] = useState<any[] | null>(null);
+  const [frameRE, setFrameRE] = useState<number | string | null>(null);
+  const [radioEvent, setRadioEvent] = useState<boolean | null>(null);
   //park brake event
   const [parkBrakeEventID, setParkBrakeEventID] = useState<number | 0>(0);
   const [framePB, setFramePB] = useState<number | null>(null);
@@ -148,9 +166,9 @@ export default function Home() {
   const [totalPoint, setTotalPoint] = useState<number | null>(null);
   //Loading Unload Data
   const [loadingUnloadDataID, setLoadingUnloadDataID] = useState<number | 0>(0);
-  const [loadingUnloadData, setLoadingUnloadData] = useState<any[] | null>(
-    null
-  );
+  const [areaName, setAreaName] = useState<string | null>(null);
+  const [duration, setDuration] = useState<string | null>(null);
+  const [loadUD, setLoadUD] = useState<number | 0>(0);
   //Requirements
   const [testParkingBrake, setTestParkingBrake] = useState<string | null>(null);
   const [testSecondaryBrake, setTestSecondaryBrake] = useState<string | null>(
@@ -208,13 +226,13 @@ export default function Home() {
       // const parsedData = JSON.parse(resData);
       console.log(parsedDataJSON);
       // console.log(typeof resData);
-      setOperatorID(parsedDataJSON.GeneralData.OperatorID || "-");
-      setOperatorName(parsedDataJSON.GeneralData.OperatorName || "-");
-      setScenarioName(parsedDataJSON.GeneralData.ScenarioName || "-");
-      setInstrukturID(parsedDataJSON.GeneralData.InstructorID || "-");
-      setInstrukturName(parsedDataJSON.GeneralData.InstructorName || "-");
-      setTimestamp(parsedDataJSON.GeneralData.Timestamp || "-");
-      setVehicleType(parsedDataJSON.GeneralData.VehicleType || "-");
+      setOperatorID(parsedDataJSON.GeneralData?.OperatorID || "-");
+      setOperatorName(parsedDataJSON.GeneralData?.OperatorName || "-");
+      setScenarioName(parsedDataJSON.GeneralData?.ScenarioName || "-");
+      setInstrukturID(parsedDataJSON.GeneralData?.InstructorID || "-");
+      setInstrukturName(parsedDataJSON.GeneralData?.InstructorName || "-");
+      setTimestamp(parsedDataJSON.GeneralData?.Timestamp || "-");
+      setVehicleType(parsedDataJSON.GeneralData?.VehicleType || "-");
       // console.log("oke");
       // console.log(operatorID);
       try {
@@ -229,12 +247,12 @@ export default function Home() {
     if (parsedDataJSON) {
       // const parsedData = JSON.parse(resData);
       // console.log(replayDataID);
-      setTime(parsedDataJSON.ReplayData[replayDataID].Time);
-      setRpm(parsedDataJSON.ReplayData[replayDataID].RPM);
-      setSpeed(parsedDataJSON.ReplayData[replayDataID].Speed);
-      setThrottle(parsedDataJSON.ReplayData[replayDataID].Throttle);
-      setSteering(parsedDataJSON.ReplayData[replayDataID].Steering);
-      setLoad(parsedDataJSON.ReplayData[replayDataID].Load || 0);
+      setTime(parsedDataJSON.ReplayData[replayDataID]?.Time ?? "-");
+      setRpm(parsedDataJSON.ReplayData[replayDataID]?.RPM ?? "-");
+      setSpeed(parsedDataJSON.ReplayData[replayDataID]?.Speed ?? "-");
+      setThrottle(parsedDataJSON.ReplayData[replayDataID]?.Throttle ?? "-");
+      setSteering(parsedDataJSON.ReplayData[replayDataID]?.Steering ?? "-");
+      setLoad(parsedDataJSON.ReplayData[replayDataID]?.Load ?? "-");
       try {
       } catch (error) {
         console.error("Error no data available!");
@@ -268,9 +286,9 @@ export default function Home() {
   useEffect(() => {
     if (parsedDataJSON) {
       // const parsedData = JSON.parse(resData);
-      setFrame(parsedDataJSON.IgnitionEvent[ignitionEventID].Frame);
+      setFrame(parsedDataJSON.IgnitionEvent[ignitionEventID]?.Frame ?? "-");
       setIgnitionEvent(
-        parsedDataJSON.IgnitionEvent[ignitionEventID].ignitionEvent
+        parsedDataJSON.IgnitionEvent[ignitionEventID]?.ignitionEvent ?? "-"
       );
       try {
       } catch (error) {
@@ -306,8 +324,12 @@ export default function Home() {
     if (parsedDataJSON) {
       // const parsedData = JSON.parse(resData);
       // console.log(typeof resData);
+      setFrameEE(
+        parsedDataJSON.ExtinguisherEvent[extinguisherEventID]?.Frame ?? "-"
+      );
       setExtinguisherEvent(
-        parsedDataJSON.ExtinguisherEvent[extinguisherEventID] || "-"
+        parsedDataJSON.ExtinguisherEvent[extinguisherEventID]
+          ?.ExtinguisherEvent ?? "-"
       );
       try {
       } catch (error) {
@@ -316,12 +338,35 @@ export default function Home() {
     }
   }, [parsedDataJSON, extinguisherEventID]);
 
+  const addExtinguisherEventID = () => {
+    if (parsedDataJSON) {
+      // const parsedData = JSON.parse(resData);
+      const extinguishereventLength = parsedDataJSON.ExtinguisherEvent.length;
+
+      if (extinguisherEventID + 1 < extinguishereventLength) {
+        setExtinguisherEventID(extinguisherEventID + 1);
+      }
+
+      try {
+      } catch (error) {
+        console.error("Error no data available!");
+      }
+    }
+  };
+
+  const substractExtinguisherEventID = () => {
+    if (extinguisherEventID != 0) {
+      setExtinguisherEventID(extinguisherEventID - 1);
+    }
+  };
+
   // init radio Event
   useEffect(() => {
     if (parsedDataJSON) {
       // const parsedData = JSON.parse(resData);
       // console.log(typeof resData);
-      setRadioEvent(parsedDataJSON.radioEvent[radioEventID] || "-");
+      setFrameRE(parsedDataJSON.radioEvent[radioEventID]?.Frame ?? "-");
+      setRadioEvent(parsedDataJSON.radioEvent[radioEventID]?.radioEvent ?? "-");
       try {
       } catch (error) {
         console.error("Error no data available!");
@@ -329,12 +374,34 @@ export default function Home() {
     }
   }, [parsedDataJSON, radioEventID]);
 
+  const addRadioEventID = () => {
+    if (parsedDataJSON) {
+      // const parsedData = JSON.parse(resData);
+      const radioEventLength = parsedDataJSON.radioEvent.length;
+
+      if (radioEventID + 1 < radioEventLength) {
+        setRadioEventID(radioEventID + 1);
+      }
+
+      try {
+      } catch (error) {
+        console.error("Error no data available!");
+      }
+    }
+  };
+
+  const substractRadioEventID = () => {
+    if (radioEventID != 0) {
+      setRadioEventID(radioEventID - 1);
+    }
+  };
+
   // init prake brake event
   useEffect(() => {
     if (parsedDataJSON) {
-      setFramePB(parsedDataJSON.parkBrakeEvent[parkBrakeEventID].Frame);
+      setFramePB(parsedDataJSON.parkBrakeEvent[parkBrakeEventID]?.Frame ?? "-");
       setParkBrakeEvent(
-        parsedDataJSON.parkBrakeEvent[parkBrakeEventID].parkBrakeEvent
+        parsedDataJSON.parkBrakeEvent[parkBrakeEventID]?.parkBrakeEvent ?? "-"
       );
       try {
       } catch (error) {
@@ -368,9 +435,12 @@ export default function Home() {
   // init Intended Gear Event
   useEffect(() => {
     if (parsedDataJSON) {
-      setFrameIG(parsedDataJSON.IntendedGearEvent[intendedGearEventID].Frame);
+      setFrameIG(
+        parsedDataJSON.IntendedGearEvent[intendedGearEventID]?.Frame ?? "-"
+      );
       setIntendedGearEvent(
-        parsedDataJSON.IntendedGearEvent[intendedGearEventID].intendedGearEvent
+        parsedDataJSON.IntendedGearEvent[intendedGearEventID]
+          ?.intendedGearEvent ?? "-"
       );
       try {
       } catch (error) {
@@ -404,9 +474,12 @@ export default function Home() {
   // init Actual Gear Event
   useEffect(() => {
     if (parsedDataJSON) {
-      setFrameAG(parsedDataJSON.ActualGearEvent[actualGearEventID].Frame);
+      setFrameAG(
+        parsedDataJSON.ActualGearEvent[actualGearEventID]?.Frame ?? "-"
+      );
       setActualGearEvent(
-        parsedDataJSON.ActualGearEvent[actualGearEventID].actualGearEvent
+        parsedDataJSON.ActualGearEvent[actualGearEventID]?.actualGearEvent ??
+          "-"
       );
       try {
       } catch (error) {
@@ -440,14 +513,20 @@ export default function Home() {
   // init Replay Operator Error
   useEffect(() => {
     if (parsedDataJSON) {
-      setName(parsedDataJSON.ReplayOperatorError[replayOperatorErrorID].Name);
+      setName(
+        parsedDataJSON.ReplayOperatorError[replayOperatorErrorID]?.Name || "-"
+      );
       setRecordedTime(
-        parsedDataJSON.ReplayOperatorError[replayOperatorErrorID].RecordedTime
+        parsedDataJSON.ReplayOperatorError[replayOperatorErrorID]
+          ?.RecordedTime || "-"
       );
       setEndTime(
-        parsedDataJSON.ReplayOperatorError[replayOperatorErrorID].EndTime
+        parsedDataJSON.ReplayOperatorError[replayOperatorErrorID]?.EndTime ||
+          "-"
       );
-      setValue(parsedDataJSON.ReplayOperatorError[replayOperatorErrorID].Value);
+      setValue(
+        parsedDataJSON.ReplayOperatorError[replayOperatorErrorID]?.Value ?? "-"
+      );
       try {
       } catch (error) {
         console.error("Error no data available!");
@@ -483,11 +562,11 @@ export default function Home() {
     if (parsedDataJSON) {
       // const parsedData = JSON.parse(resData);
       // console.log(replayDataID);
-      setNameRE(parsedDataJSON.ReplayEvents[replayEventsID].Name);
+      setNameRE(parsedDataJSON.ReplayEvents[replayEventsID]?.Name || "-");
       setRecordedTimeRE(
-        parsedDataJSON.ReplayEvents[replayEventsID].RecordedTime
+        parsedDataJSON.ReplayEvents[replayEventsID]?.RecordedTime || "-"
       );
-      setValueRE(parsedDataJSON.ReplayEvents[replayEventsID].Value);
+      setValueRE(parsedDataJSON.ReplayEvents[replayEventsID]?.Value ?? "-");
       try {
       } catch (error) {
         console.error("Error no data available!");
@@ -517,12 +596,12 @@ export default function Home() {
     }
   };
 
-  // init general data
+  // init total point
   useEffect(() => {
     if (parsedDataJSON) {
       // const parsedData = JSON.parse(resData);
       // console.log(typeof resData);
-      setTotalPoint(parsedDataJSON.TotalPoint.TotalPoint);
+      setTotalPoint(parsedDataJSON.TotalPoint?.TotalPoint ?? "-");
       try {
       } catch (error) {
         console.error("Error no data available!");
@@ -535,8 +614,14 @@ export default function Home() {
     if (parsedDataJSON) {
       // const parsedData = JSON.parse(resData);
       // console.log(typeof resData);
-      setLoadingUnloadData(
-        parsedDataJSON.LoadingUnloadData[loadingUnloadDataID] || "-"
+      setAreaName(
+        parsedDataJSON.LoadingUnloadData[loadingUnloadDataID]?.AreaName || "-"
+      );
+      setDuration(
+        parsedDataJSON.LoadingUnloadData[loadingUnloadDataID]?.Duration || "-"
+      );
+      setLoadUD(
+        parsedDataJSON.LoadingUnloadData[loadingUnloadDataID]?.Load ?? "-"
       );
       try {
       } catch (error) {
@@ -544,6 +629,28 @@ export default function Home() {
       }
     }
   }, [parsedDataJSON, loadingUnloadDataID]);
+
+  const addLoadingUnloadDataID = () => {
+    if (parsedDataJSON) {
+      // const parsedData = JSON.parse(resData);
+      const loadingUnloadDataLength = parsedDataJSON.LoadingUnloadData.length;
+
+      if (loadingUnloadDataID + 1 < loadingUnloadDataLength) {
+        setLoadingUnloadDataID(loadingUnloadDataID + 1);
+      }
+
+      try {
+      } catch (error) {
+        console.error("Error no data available!");
+      }
+    }
+  };
+
+  const substractLoadingUnloadDataID = () => {
+    if (loadingUnloadDataID != 0) {
+      setLoadingUnloadDataID(loadingUnloadDataID - 1);
+    }
+  };
 
   // init Requirements
   useEffect(() => {
@@ -629,7 +736,10 @@ export default function Home() {
               onChange={(e) => {
                 const newValue = parseInt(e.target.value, 10);
                 if (!isNaN(newValue) && parsedDataJSON) {
-                  const maxBound = parsedDataJSON.ReplayData.length - 1;
+                  const maxBound = Math.max(
+                    parsedDataJSON.ReplayData.length - 1,
+                    0
+                  );
                   setReplayDataID(Math.min(Math.max(newValue, 0), maxBound));
                 }
               }}
@@ -679,7 +789,10 @@ export default function Home() {
               onChange={(e) => {
                 const newValue = parseInt(e.target.value, 10);
                 if (!isNaN(newValue) && parsedDataJSON) {
-                  const maxBound = parsedDataJSON.IgnitionEvent.length - 1;
+                  const maxBound = Math.max(
+                    parsedDataJSON.IgnitionEvent.length - 1,
+                    0
+                  );
                   setIgnitionEventID(Math.min(Math.max(newValue, 0), maxBound));
                 }
               }}
@@ -702,8 +815,54 @@ export default function Home() {
           <div className="gap-4 flex flex-col">
             <p className="body-font">Extinguisher Event</p>{" "}
             <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left tracking-[-.01em]">
-              <li className="mb-2 ">{extinguisherEvent}</li>
+              <li className="mb-2 ">Frame: {frameEE}</li>
+              <li className="mb-2 ">Extinguisher Event: {extinguisherEvent}</li>
             </ol>
+          </div>
+          <div className="flex items-center absolute right-0 mx-10 gap-12">
+            <button
+              onClick={substractExtinguisherEventID}
+              className="confirm-button "
+            >
+              <Image
+                className="dark:invert rotate-270"
+                src="/vercel.svg"
+                alt="time -1"
+                width={20}
+                height={20}
+              />
+              Previous
+            </button>
+            <input
+              type="number"
+              className="border rounded px-2 py-1 text-center w-16"
+              value={extinguisherEventID}
+              onChange={(e) => {
+                const newValue = parseInt(e.target.value, 10);
+                if (!isNaN(newValue) && parsedDataJSON) {
+                  const maxBound = Math.max(
+                    parsedDataJSON.ExtinguisherEvent.length - 1,
+                    0
+                  );
+                  setExtinguisherEventID(
+                    Math.min(Math.max(newValue, 0), maxBound)
+                  );
+                }
+              }}
+            />
+            <button
+              onClick={addExtinguisherEventID}
+              className="confirm-button "
+            >
+              <Image
+                className="dark:invert rotate-90"
+                src="/vercel.svg"
+                alt="time +1"
+                width={20}
+                height={20}
+              />
+              Next
+            </button>
           </div>
         </div>
 
@@ -712,8 +871,46 @@ export default function Home() {
           <div className="gap-4 flex flex-col">
             <p className="body-font">Radio Event</p>{" "}
             <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left tracking-[-.01em]">
-              <li className="mb-2 ">{radioEvent}</li>
+              <li className="mb-2 ">Frame: {frameRE}</li>
+              <li className="mb-2 ">Radio Event: {radioEvent}</li>
             </ol>
+          </div>
+          <div className="flex items-center absolute right-0 mx-10 gap-12">
+            <button onClick={substractRadioEventID} className="confirm-button ">
+              <Image
+                className="dark:invert rotate-270"
+                src="/vercel.svg"
+                alt="time -1"
+                width={20}
+                height={20}
+              />
+              Previous
+            </button>
+            <input
+              type="number"
+              className="border rounded px-2 py-1 text-center w-16"
+              value={extinguisherEventID}
+              onChange={(e) => {
+                const newValue = parseInt(e.target.value, 10);
+                if (!isNaN(newValue) && parsedDataJSON) {
+                  const maxBound = Math.max(
+                    parsedDataJSON.radioEvent.length - 1,
+                    0
+                  );
+                  setRadioEventID(Math.min(Math.max(newValue, 0), maxBound));
+                }
+              }}
+            />
+            <button onClick={addRadioEventID} className="confirm-button ">
+              <Image
+                className="dark:invert rotate-90"
+                src="/vercel.svg"
+                alt="time +1"
+                width={20}
+                height={20}
+              />
+              Next
+            </button>
           </div>
         </div>
 
@@ -749,7 +946,10 @@ export default function Home() {
               onChange={(e) => {
                 const newValue = parseInt(e.target.value, 10);
                 if (!isNaN(newValue) && parsedDataJSON) {
-                  const maxBound = parsedDataJSON.parkBrakeEvent.length - 1;
+                  const maxBound = Math.max(
+                    parsedDataJSON.parkBrakeEvent.length - 1,
+                    0
+                  );
                   setParkBrakeEventID(
                     Math.min(Math.max(newValue, 0), maxBound)
                   );
@@ -801,7 +1001,10 @@ export default function Home() {
               onChange={(e) => {
                 const newValue = parseInt(e.target.value, 10);
                 if (!isNaN(newValue) && parsedDataJSON) {
-                  const maxBound = parsedDataJSON.IntendedGearEvent.length - 1;
+                  const maxBound = Math.max(
+                    parsedDataJSON.IntendedGearEvent.length - 1,
+                    0
+                  );
                   setIntendedGearEventID(
                     Math.min(Math.max(newValue, 0), maxBound)
                   );
@@ -856,7 +1059,10 @@ export default function Home() {
               onChange={(e) => {
                 const newValue = parseInt(e.target.value, 10);
                 if (!isNaN(newValue) && parsedDataJSON) {
-                  const maxBound = parsedDataJSON.ActualGearEvent.length - 1;
+                  const maxBound = Math.max(
+                    parsedDataJSON.ActualGearEvent.length - 1,
+                    0
+                  );
                   setActualGearEventID(
                     Math.min(Math.max(newValue, 0), maxBound)
                   );
@@ -908,8 +1114,10 @@ export default function Home() {
               onChange={(e) => {
                 const newValue = parseInt(e.target.value, 10);
                 if (!isNaN(newValue) && parsedDataJSON) {
-                  const maxBound =
-                    parsedDataJSON.ReplayOperatorError.length - 1;
+                  const maxBound = Math.max(
+                    parsedDataJSON.ReplayOperatorError.length - 1,
+                    0
+                  );
                   setReplayOperatorErrorID(
                     Math.min(Math.max(newValue, 0), maxBound)
                   );
@@ -963,7 +1171,10 @@ export default function Home() {
               onChange={(e) => {
                 const newValue = parseInt(e.target.value, 10);
                 if (!isNaN(newValue) && parsedDataJSON) {
-                  const maxBound = parsedDataJSON.ReplayEvents.length - 1;
+                  const maxBound = Math.max(
+                    parsedDataJSON.ReplayEvents.length - 1,
+                    0
+                  );
                   setReplayEventsID(Math.min(Math.max(newValue, 0), maxBound));
                 }
               }}
@@ -996,8 +1207,55 @@ export default function Home() {
           <div className="gap-4 flex flex-col">
             <p className="body-font">Loading Unload Data</p>{" "}
             <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left tracking-[-.01em]">
-              <li className="mb-2 ">{loadingUnloadData}</li>
+              <li className="mb-2 ">Area Name: {areaName}</li>
+              <li className="mb-2 ">Duration: {duration}</li>
+              <li className="mb-2 ">Load: {loadUD}</li>
             </ol>
+          </div>
+          <div className="flex items-center absolute right-0 mx-10 gap-12">
+            <button
+              onClick={substractLoadingUnloadDataID}
+              className="confirm-button "
+            >
+              <Image
+                className="dark:invert rotate-270"
+                src="/vercel.svg"
+                alt="time -1"
+                width={20}
+                height={20}
+              />
+              Previous
+            </button>
+            <input
+              type="number"
+              className="border rounded px-2 py-1 text-center w-16"
+              value={loadingUnloadDataID}
+              onChange={(e) => {
+                const newValue = parseInt(e.target.value, 10);
+                if (!isNaN(newValue) && parsedDataJSON) {
+                  const maxBound = Math.max(
+                    parsedDataJSON.LoadingUnloadData.length - 1,
+                    0
+                  );
+                  setLoadingUnloadDataID(
+                    Math.min(Math.max(newValue, 0), maxBound)
+                  );
+                }
+              }}
+            />
+            <button
+              onClick={addLoadingUnloadDataID}
+              className="confirm-button "
+            >
+              <Image
+                className="dark:invert rotate-90"
+                src="/vercel.svg"
+                alt="time +1"
+                width={20}
+                height={20}
+              />
+              Next
+            </button>
           </div>
         </div>
 
