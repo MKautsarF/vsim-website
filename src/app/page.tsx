@@ -2,7 +2,12 @@
 import Image from "next/image";
 import config from "@/config/config.json";
 import { useEffect, useState } from "react";
-import { getLatestResults } from "../services/data.services";
+import {
+  getLatestResults,
+  getAllResults,
+  getPerResult,
+} from "../services/data.services";
+import { Listbox } from "@headlessui/react";
 
 interface IntendedGearEvent {
   Frame: number;
@@ -102,7 +107,14 @@ interface SimulationData {
 }
 
 export default function Home() {
+  const [selected, setSelected] = useState<number | null>(null);
+
   const [resData, setResData] = useState<string | null>(null);
+  const [resDate, setResDate] = useState<string | null>(null);
+  const [resTime, setResTime] = useState<string | null>(null);
+  const [resID, setResID] = useState<
+    { id: number; date: string; time: string }[]
+  >([]);
   // const [parsedDataJSON, setParsedDataJSON] = useState<string | null>(null);
   const [parsedDataJSON, setParsedDataJSON] = useState<SimulationData | null>(
     null
@@ -194,10 +206,20 @@ export default function Home() {
       const fetchLatestData = async () => {
         try {
           const res = await getLatestResults();
-          // console.log(res);
+          const resAll = await getAllResults();
+          // console.log(res.data);
           // console.log(typeof res);
           sessionStorage.setItem("hasFetched", "true");
-          setResData(res);
+          setResData(res.data);
+          setResID(resAll);
+          console.log(resAll);
+          // setResDate(res.date);
+          const date = new Date(res.date);
+          const formattedDate = date.toLocaleDateString("en-GB");
+          setResDate(formattedDate);
+
+          setResTime(res.time);
+          // console.log(res.time);
         } catch (error) {
           console.error("Error fetching data:", error);
         }
@@ -205,7 +227,28 @@ export default function Home() {
 
       fetchLatestData();
     }
-  }, []);
+
+    // If the selected value changes, fetch data for that specific ID
+    const fetchDataByID = async () => {
+      if (selected) {
+        try {
+          const result = await getPerResult(selected); // Pass selected ID to fetch result
+          console.log(result);
+          // Process the result here
+          setResData(result.data);
+          const date = new Date(result.date);
+          const formattedDate = date.toLocaleDateString("en-GB");
+          setResDate(formattedDate);
+          setResTime(result.time);
+        } catch (error) {
+          console.error("Error fetching data for selected ID:", error);
+        }
+      }
+    };
+
+    // Run the fetchDataByID whenever selected changes
+    fetchDataByID();
+  }, [selected]);
 
   useEffect(() => {
     if (resData) {
@@ -224,7 +267,7 @@ export default function Home() {
   useEffect(() => {
     if (parsedDataJSON) {
       // const parsedData = JSON.parse(resData);
-      console.log(parsedDataJSON);
+      // console.log(parsedDataJSON);
       // console.log(typeof resData);
       setOperatorID(parsedDataJSON.GeneralData?.OperatorID || "-");
       setOperatorName(parsedDataJSON.GeneralData?.OperatorName || "-");
@@ -676,20 +719,103 @@ export default function Home() {
     }
   }, [parsedDataJSON]);
 
+  const totalTimestamps = resID.length;
+  const options = resID.map((res) => {
+    const formattedDate = new Date(res.date).toLocaleDateString("en-GB");
+    return {
+      label: `${formattedDate} ${res.time}`,
+      value: res.id,
+    };
+  });
+  useEffect(() => {
+    document.body.style.overflow = "auto";
+    return () => {
+      document.body.style.overflow = "auto"; // reset on unmount
+    };
+  }, []);
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-mono)] ">
       <header className="bg-black shadow-lg p-4 fixed top-0 left-0 right-0 w-full z-10 ">
-        <div className=" flex justify-between items-center w-full px-4 gap-4">
+        <div className=" flex justify-between items-center w-full px-4 gap-4 text-white">
           <h1 className="title-font ">VSIM</h1>
           <div className="flex gap-4 items-center flex-col sm:flex-row">
-            <h1>Option 1</h1>
-            <h1>Option 2</h1>
+            {/* <button className="confirm-button ">
+              <Image
+                className="dark:invert rotate-270"
+                src="/vercel.svg"
+                alt="time -1"
+                width={20}
+                height={20}
+              />
+              Previous
+            </button> */}
+            <Listbox
+              value={selected}
+              onChange={async (value) => {
+                setSelected(value);
+                if (value) {
+                  try {
+                    const result = await getPerResult(value);
+                    console.log("Fetched result by ID:", result);
+                    // You can update your state here, e.g.:
+                    // setResData(result.data);
+                    // setResDate(result.date);
+                    // setResTime(result.time);
+                  } catch (error) {
+                    console.error("Error fetching result by ID:", error);
+                  }
+                }
+              }}
+            >
+              <div className="relative w-48">
+                <Listbox.Button className="h-10 sm:h-12 px-3 sm:px-4 rounded-full border border-gray-300 dark:border-gray-600 bg-background text-foreground text-sm sm:text-base cursor-pointer w-full text-left">
+                  {/* {selected || "Select Time"} */}
+                  {options.find((opt) => opt.value === selected)?.label ||
+                    "Select Time"}
+                </Listbox.Button>
+
+                <Listbox.Options
+                  className={`
+              absolute z-10 mt-1 w-full rounded-xl bg-white dark:bg-[#222]
+              shadow-lg ring-1 ring-black/10 focus:outline-none text-sm
+              max-h-48 overflow-y-auto
+            `}
+                >
+                  {options.map((option, i) => (
+                    <Listbox.Option
+                      key={option.value}
+                      value={option.value}
+                      className={({ active }) =>
+                        `cursor-pointer select-none px-4 py-2 ${
+                          active ? "bg-gray-100 dark:bg-gray-800" : ""
+                        }`
+                      }
+                    >
+                      {option.label}
+                    </Listbox.Option>
+                  ))}
+                </Listbox.Options>
+              </div>
+            </Listbox>
+            {/* <button className="confirm-button ">
+              Next
+              <Image
+                className="dark:invert rotate-90"
+                src="/vercel.svg"
+                alt="time +1"
+                width={20}
+                height={20}
+              />
+            </button> */}
           </div>
         </div>
       </header>
 
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start h-full w-full">
-        <h1 className="subtitle-font">Simulation Information:</h1>
+        <h1 className="subtitle-font">
+          Simulation Information: {resDate} {resTime}
+        </h1>
 
         {/* General Data */}
         <div className="gap-4 flex flex-col">
@@ -1209,7 +1335,7 @@ export default function Home() {
             <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left tracking-[-.01em]">
               <li className="mb-2 ">Area Name: {areaName}</li>
               <li className="mb-2 ">Duration: {duration}</li>
-              <li className="mb-2 ">Load: {loadUD}</li>
+              <li className="mb-2 ">Load: {loadUD}</li>.
             </ol>
           </div>
           <div className="flex items-center absolute right-0 mx-10 gap-12">
